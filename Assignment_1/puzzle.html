@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>8 Puzzle Solver Visualization</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 80px);
+      grid-template-rows: repeat(3, 80px);
+      gap: 5px;
+    }
+
+    .tile {
+      width: 80px;
+      height: 80px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #3498db;
+      color: white;
+      font-size: 24px;
+      font-weight: bold;
+      border-radius: 5px;
+    }
+
+    .blank {
+      background-color: #ecf0f1;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+
+  </style>
+</head>
+<body>
+
+  <h2>8 Puzzle Solver (A* with Animation)</h2>
+  <div id="puzzle" class="grid"></div>
+  <button onclick="startSolving()">Start Solving</button>
+
+  <script>
+    const GOAL = [
+      [1, 2, 3],
+      [4, 5, 6],
+      [7, 8, 0]
+    ];
+
+    let initial = [
+      [8, 2, 7],
+      [0, 4, 6],
+      [3, 5, 1]
+    ];
+
+    const puzzleDiv = document.getElementById("puzzle");
+
+    function render(board) {
+      puzzleDiv.innerHTML = '';
+      board.flat().forEach(val => {
+        const tile = document.createElement('div');
+        tile.className = 'tile' + (val === 0 ? ' blank' : '');
+        tile.textContent = val !== 0 ? val : '';
+        puzzleDiv.appendChild(tile);
+      });
+    }
+
+    function clone(board) {
+      return board.map(row => row.slice());
+    }
+
+    function findZero(board) {
+      for (let i = 0; i < 3; i++)
+        for (let j = 0; j < 3; j++)
+          if (board[i][j] === 0) return [i, j];
+    }
+
+    function heuristic(board) {
+      let dist = 0;
+      for (let i = 0; i < 3; i++)
+        for (let j = 0; j < 3; j++) {
+          let val = board[i][j];
+          if (val !== 0) {
+            let targetRow = Math.floor((val - 1) / 3);
+            let targetCol = (val - 1) % 3;
+            dist += Math.abs(i - targetRow) + Math.abs(j - targetCol);
+          }
+        }
+      return dist;
+    }
+
+    function serialize(board) {
+      return board.flat().join(',');
+    }
+
+    function getNeighbors(state) {
+      const [r, c] = findZero(state.board);
+      const moves = [[-1,0],[1,0],[0,-1],[0,1]];
+      let neighbors = [];
+
+      for (let [dr, dc] of moves) {
+        let nr = r + dr, nc = c + dc;
+        if (nr >= 0 && nr < 3 && nc >= 0 && nc < 3) {
+          let newBoard = clone(state.board);
+          [newBoard[r][c], newBoard[nr][nc]] = [newBoard[nr][nc], newBoard[r][c]];
+          neighbors.push({
+            board: newBoard,
+            g: state.g + 1,
+            h: heuristic(newBoard),
+            prev: state
+          });
+        }
+      }
+      return neighbors;
+    }
+
+    function aStarSolve(startBoard) {
+      let start = {
+        board: clone(startBoard),
+        g: 0,
+        h: heuristic(startBoard),
+        prev: null
+      };
+
+      let open = [start];
+      let visited = new Set();
+
+      while (open.length) {
+        open.sort((a, b) => (a.g + a.h) - (b.g + b.h));
+        let current = open.shift();
+        let key = serialize(current.board);
+
+        if (visited.has(key)) continue;
+        visited.add(key);
+
+        if (serialize(current.board) === serialize(GOAL)) {
+          // Found goal, reconstruct path
+          let path = [];
+          while (current) {
+            path.unshift(current.board);
+            current = current.prev;
+          }
+          return path;
+        }
+
+        let neighbors = getNeighbors(current);
+        for (let n of neighbors) {
+          if (!visited.has(serialize(n.board))) {
+            open.push(n);
+          }
+        }
+      }
+
+      return null;
+    }
+
+    function startSolving() {
+      let solution = aStarSolve(initial);
+      if (!solution) {
+        alert("No solution found!");
+        return;
+      }
+
+      let i = 0;
+      const interval = setInterval(() => {
+        render(solution[i]);
+        i++;
+        if (i >= solution.length) clearInterval(interval);
+      }, 500);
+    }
+
+    // Initial render
+    render(initial);
+  </script>
+</body>
+</html>

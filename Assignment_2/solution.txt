@@ -1,0 +1,13 @@
+The Solution (11 Steps):
+This solution assumes the boat starts on the left bank and all people start on the left bank. 
+1. Left to Right: Two cannibals cross the river.
+2. Right to Left: One cannibal returns with the boat.
+3. Left to Right: Two cannibals cross the river again.
+4. Right to Left: One cannibal returns.
+5. Left to Right: Two missionaries cross the river.
+6. Right to Left: One missionary and one cannibal return.
+7. Left to Right: Two missionaries cross the river again.
+8. Right to Left: One cannibal returns.
+9. Left to Right: Two cannibals cross the river.
+10. Right to Left: One cannibal returns.
+11. Left to Right: Two cannibals cross the river. 
